@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Ólíkar áferðir</title>
+	</head>
+	<body>
+        <canvas id="c"  width="800" height="800"></canvas>
+		<script src="js/three.js"></script>
+        <script src="js/examples/OrbitControls.js"></script>
+        <script src="js/examples/dat.gui.min.js"></script>
+		<script>
+            // Ná í striga
+            const canvas = document.querySelector('#c');
+
+            const size = 16;
+            const divisions = 15;
+            const cellSize = size / divisions;
+
+            // Skilgreina sviðsnet
+			const scene = new THREE.Scene();
+            scene.background = new THREE.Color( 0xeeeeee );
+            
+            // Skilgreina myndavél og staðsetja hana
+
+			//const camera = new THREE.PerspectiveCamera( 75, canvas.clientWidth/canvas.clientHeight, 0.1, 1000 );
+			//camera.position.set(0, 5, 16);
+            const camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+            camera.position.set(0, 1.5, divisions / 2+0.5);
+
+            // Bæta við músarstýringu
+            const controls = new THREE.OrbitControls( camera, canvas );
+
+            // Skilgreina birtingaraðferð með afbjögun (antialias)
+			const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
+
+            // ----------------------Teikna gridið ------------------------------------------
+            const gridHelper = new THREE.GridHelper( size, divisions );
+            scene.add( gridHelper );
+
+            //-------------------Teikna upp Centipede --------------------------------------
+			const ballGeometry = new THREE.SphereGeometry( 0.4, 12, 10 );
+
+            var centipede = new THREE.Object3D();
+            //Hausinn
+            const headMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+			const head = new THREE.Mesh(ballGeometry, headMaterial);
+            head.position.z = -8;
+            head.position.y = 0.2;
+            centipede.add(head);
+
+            //Líkami
+            var position = 0.5;
+            for(var i = 0; i < 5; i++){
+                const standardMaterial = new THREE.MeshStandardMaterial( { color: 0x038C3E } );
+			    const body = new THREE.Mesh( ballGeometry, standardMaterial );
+                body.position.x -= (i + 1) * 0.5;
+                body.position.z = -8;
+                body.position.y = 0.2;
+                centipede.add(body);
+                position += 0.5;
+            }
+            scene.add(centipede);
+
+            //------------------ Teikna sveppina ---------------------------------------------
+            for(var i = 0; i < divisions; i++){
+                var zPosition = (i - divisions / 2 + 0.5) * cellSize;
+                for(var j = 0; j < 1; j++){
+                    var min = -size / 2 + cellSize / 2; // Adjust min to start from the middle of a cell
+                    var max = size / 2 - cellSize / 2; // Adjust max to end before the middle of the last cell
+                    var randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
+                    //var xPosition = (i - divisions / 2) * cellSize;
+
+                    const stilkurGemotry = new THREE.CylinderGeometry(0.1, 0.2, 0.4, 10);
+                    const stilkurMaterial = new THREE.MeshStandardMaterial({color: 0xffffff});
+                    const stilkurBody = new THREE.Mesh(stilkurGemotry, stilkurMaterial);
+                    stilkurBody.position.x = randomNumber;
+                    stilkurBody.position.y = 0.25;
+                    stilkurBody.position.z = zPosition;
+                    scene.add(stilkurBody);
+
+                    const hatGemotry = new THREE.ConeGeometry(0.3, 0.2, 16)
+                    const hatMaterial = new THREE.MeshStandardMaterial({color: 0xEB3650});
+                    const hatBody = new THREE.Mesh(hatGemotry, hatMaterial);
+                    hatBody.position.x = randomNumber;
+                    hatBody.position.y = 0.25+0.2;
+                    hatBody.position.z = zPosition;
+                    scene.add(hatBody);
+                }
+            }
+
+            //-----------------Álfur-----------------------------------------------------
+            var alfur = new THREE.Object3D();
+
+            const leftFootGeometry = new THREE.BoxGeometry( 0.6, 0.2, 0.4 ); 
+            const leftFootMaterial = new THREE.MeshBasicMaterial( { color: 0x8A65E6 }); 
+            const leftFootTorus = new THREE.Mesh( leftFootGeometry, leftFootMaterial );
+            leftFootTorus.position.y = 0.1;
+            leftFootTorus.position.z = divisions/2+1;
+            alfur.add(leftFootTorus);
+
+            const upperBodyGeometry = new THREE.CapsuleGeometry( 0.4, 0.1, 1.5, 5 ); 
+            const upperBodyMaterial = new THREE.MeshBasicMaterial( {color: 0x638BE1} ); 
+            const uppBody = new THREE.Mesh( upperBodyGeometry, upperBodyMaterial ); 
+            uppBody.position.y = 0.35+0.2;
+            uppBody.position.z = divisions/2+1;
+            alfur.add( uppBody );
+
+            const faceAlfurGeometry = new THREE.SphereGeometry( 0.3, 24, 24 ); 
+            const faceAlfurMaterial = new THREE.MeshBasicMaterial( { color: 0xE0B78D } ); 
+            const faceAlfur = new THREE.Mesh( faceAlfurGeometry, faceAlfurMaterial ); 
+            faceAlfur.position.y = 0.25+0.75+0.15;
+            faceAlfur.position.z = divisions/2+1;
+            alfur.add(faceAlfur);
+
+            const hatAlfurGeometry = new THREE.ConeGeometry(0.5, 0.5, 10);
+            const hatAlfurMaterial = new THREE.MeshStandardMaterial({color: 0xEB3650});
+            const hatAlfurBody = new THREE.Mesh(hatAlfurGeometry, hatAlfurMaterial);
+            hatAlfurBody.position.y = 0.5+0.25+0.75+0.15;
+            hatAlfurBody.position.z = divisions/2+1;
+            alfur.add(hatAlfurBody);
+
+            scene.add(alfur);
+
+            
+            // Skilgreina ljósgjafa og bæta honum í sviðsnetið
+            const light = new THREE.DirectionalLight(0xFFFFFF, 1);
+            light.position.set(3, 3, 3);
+            scene.add(light);
+
+            const gui = new dat.GUI();
+            gui.add(head.position, 'x', -3, 3, 0.1);
+
+            function onKeyDown(event) {
+                switch (event.keyCode) {
+                    case 37: 
+                        alfur.position.x -= 0.5;
+                        break;
+                    case 39: 
+                        alfur.position.x += 0.5;
+                        break;
+                }
+            }
+
+            document.addEventListener('keydown', onKeyDown);
+
+			const animate = function () {
+				requestAnimationFrame( animate );
+                camera.position.set(alfur.position.x, 1.5, divisions / 2+0.5);
+
+                var direction = 1;
+                for(var i = 0; i < centipede.children.length; i++){
+                    var bodyPart = centipede.children[i];
+                    if (!bodyPart.direction) {
+                        bodyPart.direction = 1; 
+                    }
+
+                    if (bodyPart.position.x < -size / 2 || bodyPart.position.x > size / 2) {
+                        bodyPart.position.z += 0.5;
+                        bodyPart.direction *= -1;
+                    } else if (bodyPart.position.z < -size / 2 || bodyPart.position.z > size / 2) {
+                        bodyPart.position.z += 0.5;
+                        bodyPart.direction *= -1;
+                    } 
+                    bodyPart.position.x += 0.05 * bodyPart.direction;
+                }
+	
+
+				renderer.render( scene, camera );
+			};
+
+			animate();
+		</script>
+	</body>
+</html>
