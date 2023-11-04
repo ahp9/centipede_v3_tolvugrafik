@@ -65,7 +65,9 @@
             scene.add(centipede);
 
             //------------------ Teikna sveppina ---------------------------------------------
-            var mushRooms = [];
+            var mushrooms = [];
+            var mushroomsBody = [];
+            var mushroomHits = [4,4,4,4,4,4,4,4,4,4,4,4,4,4];
             for(var i = 0; i < divisions; i++){
                 var zPosition = (i - divisions / 2 + 0.5) * cellSize;
                 for(var j = 0; j < 1; j++){
@@ -80,7 +82,8 @@
                     stilkurBody.position.x = randomNumber;
                     stilkurBody.position.y = 0.25;
                     stilkurBody.position.z = zPosition;
-                    scene.add(stilkurBody);
+                    scene.add(stilkurBody);+
+                    mushroomsBody.push(stilkurBody);
 
                     const hatGemotry = new THREE.ConeGeometry(0.3, 0.2, 16)
                     const hatMaterial = new THREE.MeshStandardMaterial({color: 0xEB3650});
@@ -89,7 +92,7 @@
                     hatBody.position.y = 0.25+0.2;
                     hatBody.position.z = zPosition;
                     scene.add(hatBody);
-                    mushRooms.push(hatBody);
+                    mushrooms.push(hatBody);
                 }
             }
 
@@ -201,11 +204,16 @@
             function collission(object ){
                 var originPoint = object.position.clone();
 
-                for (var i = 0; i < mushRooms.length; i++) {
-                    var mushroom = mushRooms[i];
+                for (var i = 0; i < mushrooms.length; i++) {
+                    var mushroom = mushrooms[i];
                     var distance = originPoint.distanceTo(mushroom.position);
-                    if (distance < 1) { // Adjust the threshold value as needed
-                        console.log("Hit");
+                    if (distance < 0.5) { // Adjust the threshold value as needed
+                        mushroomHits[i] -= 1;
+                        console.log(mushroomHits[i]);
+                    }
+                    if(mushroomHits[i] == 0){
+                        scene.remove(mushroom);
+                        scene.remove(mushroomsBody[i]);
                     }
                 }
             }
