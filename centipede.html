@@ -65,74 +65,68 @@
             scene.add(centipede);
 
             //------------------ Teikna sveppina ---------------------------------------------
-            var mushrooms = [];
-            var mushroomsBody = [];
-            var mushroomHits = [4,4,4,4,4,4,4,4,4,4,4,4,4,4];
-            for(var i = 0; i < divisions; i++){
-                var zPosition = (i - divisions / 2 + 0.5) * cellSize;
-                for(var j = 0; j < 1; j++){
-                    var min = -size / 2 + cellSize / 2; // Adjust min to start from the middle of a cell
-                    var max = size / 2 - cellSize / 2; // Adjust max to end before the middle of the last cell
-                    var randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
-                    //var xPosition = (i - divisions / 2) * cellSize;
 
-                    const stilkurGemotry = new THREE.CylinderGeometry(0.1, 0.2, 0.4, 10);
-                    const stilkurMaterial = new THREE.MeshStandardMaterial({color: 0xffffff});
-                    const stilkurBody = new THREE.Mesh(stilkurGemotry, stilkurMaterial);
-                    stilkurBody.position.x = randomNumber;
-                    stilkurBody.position.y = 0.25;
-                    stilkurBody.position.z = zPosition;
-                    scene.add(stilkurBody);+
-                    mushroomsBody.push(stilkurBody);
+            const mushrooms = [];
+            const mushroomsStilkur = [];
+            const stilkurGemotry = new THREE.CylinderGeometry(0.1, 0.2, 0.4, 10);
+            const stilkurMaterial = new THREE.MeshStandardMaterial({color: 0xffffff});
 
-                    const hatGemotry = new THREE.ConeGeometry(0.3, 0.2, 16)
-                    const hatMaterial = new THREE.MeshStandardMaterial({color: 0xEB3650});
-                    const hatBody = new THREE.Mesh(hatGemotry, hatMaterial);
-                    hatBody.position.x = randomNumber;
-                    hatBody.position.y = 0.25+0.2;
-                    hatBody.position.z = zPosition;
-                    scene.add(hatBody);
-                    mushrooms.push(hatBody);
-                }
+            const hatGemotry = new THREE.ConeGeometry(0.3, 0.2, 16)
+            const hatMaterial = new THREE.MeshStandardMaterial({color: 0xEB3650});
+
+            for (let j = -8; j <= 8; j++) {
+                var random = Math.random() * 15 - 7.5;
+                const stilkurBody = new THREE.Mesh(stilkurGemotry, stilkurMaterial);
+                stilkurBody.position.set(random, 0.25, j);
+                scene.add(stilkurBody);
+
+                const hatBody = new THREE.Mesh(hatGemotry, hatMaterial);
+                hatBody.position.set(random, 0.25+0.2, j);
+                scene.add(hatBody)
+                mushrooms.push(hatBody);
+                mushroomsStilkur.push(stilkurBody);
+
             }
 
+            const mushroomHits = new Array(mushrooms.length).fill(0);
+
             //-----------------Álfur-----------------------------------------------------
-            var alfur = new THREE.Object3D();
+            function createPart(geometry, material, position, parent, yOffset) {
+                const part = new THREE.Mesh(geometry, material);
+                part.position.set(position.x, yOffset, position.z);
+                parent.add(part);
+            }
 
-            const leftFootGeometry = new THREE.BoxGeometry( 0.6, 0.2, 0.4 ); 
-            const leftFootMaterial = new THREE.MeshBasicMaterial( { color: 0x8A65E6 }); 
-            const leftFootTorus = new THREE.Mesh( leftFootGeometry, leftFootMaterial );
-            leftFootTorus.position.y = 0.1;
-            leftFootTorus.position.z = divisions/2+1;
-            alfur.add(leftFootTorus);
 
-            const upperBodyGeometry = new THREE.CapsuleGeometry( 0.4, 0.1, 1.5, 5 ); 
-            const upperBodyMaterial = new THREE.MeshBasicMaterial( {color: 0x638BE1} ); 
-            const uppBody = new THREE.Mesh( upperBodyGeometry, upperBodyMaterial ); 
-            uppBody.position.y = 0.35+0.2;
-            uppBody.position.z = divisions/2+1;
-            alfur.add( uppBody );
 
-            const faceAlfurGeometry = new THREE.SphereGeometry( 0.3, 24, 24 ); 
-            const faceAlfurMaterial = new THREE.MeshBasicMaterial( { color: 0xE0B78D } ); 
-            const faceAlfur = new THREE.Mesh( faceAlfurGeometry, faceAlfurMaterial ); 
-            faceAlfur.position.y = 0.25+0.75+0.15;
-            faceAlfur.position.z = divisions/2+1;
-            alfur.add(faceAlfur);
-
-            const hatAlfurGeometry = new THREE.ConeGeometry(0.5, 0.5, 10);
-            const hatAlfurMaterial = new THREE.MeshStandardMaterial({color: 0xEB3650});
-            const hatAlfurBody = new THREE.Mesh(hatAlfurGeometry, hatAlfurMaterial);
-            hatAlfurBody.position.y = 0.5+0.25+0.75+0.15;
-            hatAlfurBody.position.z = divisions/2+1;
-            alfur.add(hatAlfurBody);
-
+            const alfur = new THREE.Object3D();
             scene.add(alfur);
 
+            const zPosition = divisions / 2 + 1;
+
+            const leftFootGeometry = new THREE.BoxGeometry(0.6, 0.2, 0.4);
+            const leftFootMaterial = new THREE.MeshBasicMaterial({ color: 0x8A65E6 });
+            createPart(leftFootGeometry, leftFootMaterial, { x: 0, z: zPosition }, alfur, 0.1);
+
+            const upperBodyGeometry = new THREE.CapsuleGeometry(0.4, 0.1, 1.5, 5);
+            const upperBodyMaterial = new THREE.MeshBasicMaterial({ color: 0x638BE1 });
+            createPart(upperBodyGeometry, upperBodyMaterial, { x: 0, z: zPosition }, alfur, 0.55);
+
+            const faceAlfurGeometry = new THREE.SphereGeometry(0.3, 24, 24);
+            const faceAlfurMaterial = new THREE.MeshBasicMaterial({ color: 0xE0B78D });
+            createPart(faceAlfurGeometry, faceAlfurMaterial, { x: 0, z: zPosition }, alfur, 1.35);
+
+            const hatAlfurGeometry = new THREE.ConeGeometry(0.5, 0.5, 10);
+            const hatAlfurMaterial = new THREE.MeshStandardMaterial({ color: 0xEB3650 });
+            createPart(hatAlfurGeometry, hatAlfurMaterial, { x: 0, z: zPosition }, alfur, 1.8);
+
+
             //-------------------- Skot -----------------------------------------
-            const bulletGeometry = new THREE.BoxGeometry( 0.4, 0.2, 0.5 ); 
+            const bulletGeometry = new THREE.ConeGeometry( 0.4, 0.2, 10 ); 
             const bulletMatieral = new THREE.MeshBasicMaterial( { color: 0x8A65E6 }); 
             const bullet = new THREE.Mesh( bulletGeometry, bulletMatieral );
+
+            let bulletActive = false;
             
             // Skilgreina ljósgjafa og bæta honum í sviðsnetið
             const light = new THREE.DirectionalLight(0xFFFFFF, 1);
@@ -161,19 +155,50 @@
             document.addEventListener('keydown', onKeyDown);
 
             function shoot(){
-                isShooting = true;
-                bullet.position.set(alfur.position.x, 0.1, divisions/2+0.5);
-                scene.add(bullet);
+                if (!bulletActive) {
+                    const vector = new THREE.Vector3(0, 0, -1);
+                    bullet.position.set(alfur.position.x, 0.1, divisions/2+0.5);
+                    bullet.velocity = vector.multiplyScalar(0.1);
+                    scene.add(bullet);
+                    bulletActive = true;
+                }
+            }
+
+            function handleBulletCollision() {
+                for (let i = 0; i < mushrooms.length; i++) {
+                    if (mushroomHits[i] < 4) {
+                        const mushroom = mushrooms[i];
+                        const mushroomPosition = mushroom.position;
+                        const distance = bullet.position.distanceTo(mushroomPosition);
+                        if (distance < 0.5) {
+                            mushroomHits[i]++;
+                            scene.remove(bullet);
+                            bulletActive = false;
+                            if (mushroomHits[i] === 4) {
+                                scene.remove(mushroom);
+                                scene.remove(mushroomsStilkur[i]);
+                            }
+                            break;
+                        } 
+                    }
+                }
             }
 
 			const animate = function () {
 				requestAnimationFrame( animate );
-                //collission(head);
 
-                if(isShooting){
-                    bullet.position.z -= 0.1;
-                    collission(bullet);
+                if (bulletActive) {
+                    bullet.position.add(bullet.velocity);
+                    handleBulletCollision();
+                } 
+                if(bullet.position.z < -8){
+                    bulletActive = false;
+                    scene.remove(bullet);
+
                 }
+
+
+
                 if(cameraView.checkbox){
                     camera.position.set(alfur.position.x, 1.5, divisions / 2+0.5);
                 } else {
@@ -206,17 +231,57 @@
 
                 for (var i = 0; i < mushrooms.length; i++) {
                     var mushroom = mushrooms[i];
-                    var distance = originPoint.distanceTo(mushroom.position);
-                    if (distance < 0.5) { // Adjust the threshold value as needed
-                        mushroomHits[i] -= 1;
-                        console.log(mushroomHits[i]);
-                    }
-                    if(mushroomHits[i] == 0){
-                        scene.remove(mushroom);
-                        scene.remove(mushroomsBody[i]);
+                    var distance = originPoint.distanceTo(mushroom.hat.position);
+                    console.log(mushroom.hat.geometry.interse)
+
+                    if (distance < 0.5) { 
+                        console.log(mushroom)
+                        scene.remove(object);
+
+                        if (mushroomHitCounts[i] === undefined) {
+                            mushroomHitCounts[i] = 1;
+                        } else {
+                            mushroomHitCounts[i]++;
+                        }
+
+                        if (mushroomHitCounts[i] >= 4) {
+                            scene.remove(mushroom.hat);
+                            scene.remove(mushroom.stilkur);
+                            delete mushroomHitCounts[i];
+                            console.log(mushroomHitCounts[i]);
+                        }
                     }
                 }
             }
+
+            function collisionDetection(bullet, mushrooms) {
+    const bulletBox = new THREE.Sphere().setFromObject(bullet);
+
+    for (let i = 0; i < mushrooms.length; i++) {
+        const mushroom = mushrooms[i];
+        const mushroomBox = new THREE.Sphere().setFromPoints(mushroom.hat.geometry.points);
+
+        console.log(bulletBox + " " + mushroomBox);
+        if (bulletBox.intersectsBox(mushroomBox)) {
+            // Collision detected
+            scene.remove(bullet); // Remove the bullet
+            scene.remove(mushroom.hat); // Remove the mushroom's hat
+            scene.remove(mushroom.stilkur); // Remove the mushroom's stem
+
+            // Keep track of how many times each mushroom has been hit
+            const mushroomKey = i.toString();
+            if (mushroomHitCounts[mushroomKey]) {
+                mushroomHitCounts[mushroomKey]++;
+                if (mushroomHitCounts[mushroomKey] >= 3) {
+                    // Remove the entire mushroom if hit 3 times
+                    mushrooms.splice(i, 1);
+                }
+            } else {
+                mushroomHitCounts[mushroomKey] = 1;
+            }
+        }
+    }
+}
 
 			animate();
 		</script>
