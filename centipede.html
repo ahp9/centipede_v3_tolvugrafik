@@ -3,11 +3,7 @@
 	<head>
 		<meta charset="utf-8">
 		<title>Ólíkar áferðir</title>
-        <style>
-            body {
-                background-color: white;
-            }
-        </style>
+        <link rel="stylesheet" href="./styles.css">
 	</head>
 	<body>
         <canvas id="c"  width="800" height="800"></canvas>
@@ -89,10 +85,10 @@
             for (let j = -8; j <= 8; j++) {
                 var random = Math.random() * 15 - 7.5;
                 const stilkurBody = new THREE.Mesh(stilkurGemotry, stilkurMaterial);
-                stilkurBody.position.set(random, 0.25, j);
+                stilkurBody.position.set(random, 0.25, j-0.5);
 
                 const hatBody = new THREE.Mesh(hatGemotry, hatMaterial);
-                hatBody.position.set(random, 0.25+0.2, j);
+                hatBody.position.set(random, 0.25+0.2, j-0.5);
 
                 mushrooms.add(hatBody);
                 mushroomsStilkur.add(stilkurBody);
@@ -151,10 +147,10 @@
 
             function onKeyDown(event) {
                 switch (event.keyCode) {
-                    case 37: 
+                    case 65: 
                         alfur.position.x -= 0.5;
                         break;
-                    case 39: 
+                    case 68: 
                         alfur.position.x += 0.5;
                         break;
                     case 32:
@@ -261,12 +257,14 @@
 
             function checkGameResult() {
                 if (centipede.children.length === 0) {
-                    window.alert("YOU WIN!");
+                    //window.alert("YOU WIN!");
+                    showGameOverlay('You Win!');
                 } else {
                     for (var i = 0; i < centipede.children.length; i++) {
                         if (centipede.children[i].position.z >= divisions / 2) {
                 
-                            window.alert("YOU LOSE!");
+                            //window.alert("YOU LOSE!");
+                            showGameOverlay('You Lose!');
                             centipedeAlive = false;
                             break;
                         }
@@ -307,8 +305,27 @@
             function updateScore(points) {
                 score += points;
                 document.getElementById("score").textContent = "Score: " + score;
-}
+            }
+
+            function showGameOverlay(message) {
+                const gameOverlay = document.getElementById('gameOverlay');
+                const gameMessage = document.getElementById('gameMessage');
+
+                gameMessage.textContent = message;
+                gameOverlay.style.display = 'flex';
+            }
+
+            function hideGameOverlay() {
+                const gameOverlay = document.getElementById('gameOverlay');
+                gameOverlay.style.display = 'none';
+            }
+
 		</script>
         <div id="score">Score: 0</div>
+        <div id="gameOverlay" style="display: none;">
+            <div id="gameMessage">You Win!</div>
+            <button id="restartButton">Restart</button>
+        </div>
+        
 	</body>
 </html>

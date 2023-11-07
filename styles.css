@@ -1,0 +1,32 @@
+body {
+    background-color: white;
+    display: flex;
+}
+
+body #score {
+    margin: 2rem;
+    background-color: #a3b18a;
+    padding: 1rem;
+    width: 20%;
+}
+
+#gameOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+#gameMessage {
+    font-size: 24px;
+    color: white;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 20px;
+    border-radius: 5px;
+}
