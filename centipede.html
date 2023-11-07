@@ -83,6 +83,8 @@
                 const hatBody = new THREE.Mesh(hatGemotry, hatMaterial);
                 hatBody.position.set(random, 0.25+0.2, j);
                 scene.add(hatBody)
+
+
                 mushrooms.push(hatBody);
                 mushroomsStilkur.push(stilkurBody);
 
@@ -122,7 +124,7 @@
 
 
             //-------------------- Skot -----------------------------------------
-            const bulletGeometry = new THREE.ConeGeometry( 0.4, 0.2, 10 ); 
+            const bulletGeometry = new THREE.IcosahedronGeometry(0.1, 5);
             const bulletMatieral = new THREE.MeshBasicMaterial( { color: 0x8A65E6 }); 
             const bullet = new THREE.Mesh( bulletGeometry, bulletMatieral );
 
@@ -158,7 +160,7 @@
                 if (!bulletActive) {
                     const vector = new THREE.Vector3(0, 0, -1);
                     bullet.position.set(alfur.position.x, 0.1, divisions/2+0.5);
-                    bullet.velocity = vector.multiplyScalar(0.1);
+                    bullet.velocity = vector.multiplyScalar(0.2);
                     scene.add(bullet);
                     bulletActive = true;
                 }
@@ -174,6 +176,8 @@
                             mushroomHits[i]++;
                             scene.remove(bullet);
                             bulletActive = false;
+                            mushroom.material.color.set(0xffff4f);
+                            scene.add(mushroom);
                             if (mushroomHits[i] === 4) {
                                 scene.remove(mushroom);
                                 scene.remove(mushroomsStilkur[i]);
@@ -182,8 +186,54 @@
                         } 
                     }
                 }
+
+                for (let i = 0; i < centipede.children.length; i++) {
+                    const bodyPart = centipede.children[i];
+                    const bodyPartPosition = bodyPart.position;
+                    const distance = bullet.position.distanceTo(bodyPartPosition);
+                    if (distance < 0.5) {
+                        scene.remove(bullet);
+                        bulletActive = false;
+                        centipede.remove(bodyPart);
+                        centipede.children[i].material.color.set(0xff0000);
+                        break;
+                    } 
+                    
+                }
             }
 
+            function centipedeMovement(){
+                var direction = 1;
+                var collision = centipedeMushRoomCollision(centipede.children[0]);
+                for(var i = 0; i < centipede.children.length; i++){
+                    var bodyPart = centipede.children[i];
+                    if (!bodyPart.direction) {
+                        bodyPart.direction = 1; 
+                    }
+                    if(collision > 0){
+                        bodyPart.position.z += 0.5;
+                    } else if (bodyPart.position.x < -size / 2 || bodyPart.position.x > size / 2) {
+                        bodyPart.position.z += 0.5;
+                        bodyPart.direction *= -1;
+                    } else if (bodyPart.position.z < -size / 2 || bodyPart.position.z > size / 2) {
+                        bodyPart.position.z += 0.5;
+                        bodyPart.direction *= -1;
+                    } 
+                    bodyPart.position.x += 0.05 * bodyPart.direction;
+                }
+            }
+
+
+            function centipedeMushRoomCollision(head){
+                for (let i = 0; i < mushrooms.length; i++) {
+                    const mushroom = mushrooms[i];
+                    const mushroomPosition = mushroom.position;
+                    const distance = head.position.distanceTo(mushroomPosition);
+                    if (distance < 0.8) {
+                        return Math.floor(Math.random()*2)*2-1;
+                    } 
+                }
+            }
 			const animate = function () {
 				requestAnimationFrame( animate );
 
@@ -194,10 +244,7 @@
                 if(bullet.position.z < -8){
                     bulletActive = false;
                     scene.remove(bullet);
-
                 }
-
-
 
                 if(cameraView.checkbox){
                     camera.position.set(alfur.position.x, 1.5, divisions / 2+0.5);
@@ -205,83 +252,11 @@
                     camera.position.set(0, 5, 16)
                 }
 
-                var direction = 1;
-                for(var i = 0; i < centipede.children.length; i++){
-                    var bodyPart = centipede.children[i];
-                    if (!bodyPart.direction) {
-                        bodyPart.direction = 1; 
-                    }
-
-                    if (bodyPart.position.x < -size / 2 || bodyPart.position.x > size / 2) {
-                        bodyPart.position.z += 0.5;
-                        bodyPart.direction *= -1;
-                    } else if (bodyPart.position.z < -size / 2 || bodyPart.position.z > size / 2) {
-                        bodyPart.position.z += 0.5;
-                        bodyPart.direction *= -1;
-                    } 
-                    bodyPart.position.x += 0.05 * bodyPart.direction;
-                }
+                centipedeMovement();
 	
 
 				renderer.render( scene, camera );
 			};
-
-            function collission(object ){
-                var originPoint = object.position.clone();
-
-                for (var i = 0; i < mushrooms.length; i++) {
-                    var mushroom = mushrooms[i];
-                    var distance = originPoint.distanceTo(mushroom.hat.position);
-                    console.log(mushroom.hat.geometry.interse)
-
-                    if (distance < 0.5) { 
-                        console.log(mushroom)
-                        scene.remove(object);
-
-                        if (mushroomHitCounts[i] === undefined) {
-                            mushroomHitCounts[i] = 1;
-                        } else {
-                            mushroomHitCounts[i]++;
-                        }
-
-                        if (mushroomHitCounts[i] >= 4) {
-                            scene.remove(mushroom.hat);
-                            scene.remove(mushroom.stilkur);
-                            delete mushroomHitCounts[i];
-                            console.log(mushroomHitCounts[i]);
-                        }
-                    }
-                }
-            }
-
-            function collisionDetection(bullet, mushrooms) {
-    const bulletBox = new THREE.Sphere().setFromObject(bullet);
-
-    for (let i = 0; i < mushrooms.length; i++) {
-        const mushroom = mushrooms[i];
-        const mushroomBox = new THREE.Sphere().setFromPoints(mushroom.hat.geometry.points);
-
-        console.log(bulletBox + " " + mushroomBox);
-        if (bulletBox.intersectsBox(mushroomBox)) {
-            // Collision detected
-            scene.remove(bullet); // Remove the bullet
-            scene.remove(mushroom.hat); // Remove the mushroom's hat
-            scene.remove(mushroom.stilkur); // Remove the mushroom's stem
-
-            // Keep track of how many times each mushroom has been hit
-            const mushroomKey = i.toString();
-            if (mushroomHitCounts[mushroomKey]) {
-                mushroomHitCounts[mushroomKey]++;
-                if (mushroomHitCounts[mushroomKey] >= 3) {
-                    // Remove the entire mushroom if hit 3 times
-                    mushrooms.splice(i, 1);
-                }
-            } else {
-                mushroomHitCounts[mushroomKey] = 1;
-            }
-        }
-    }
-}
 
 			animate();
 		</script>
