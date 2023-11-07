@@ -135,15 +135,22 @@
 
             let bulletActive = false;
             
-            // Skilgreina ljósgjafa og bæta honum í sviðsnetið
+            //----------------------Ljós----------------------------------------------------
             const light = new THREE.DirectionalLight(0xFFFFFF, 1);
             light.position.set(3, 3, 3);
             scene.add(light);
 
+            //------------GUI-----------------------------------------------------------
             const gui = new dat.GUI();
             gui.add(cameraView, 'checkbox').onChange(function (value) {
                 console.log(value);
             }); 
+
+            const gameConfig = {
+                score: 0,
+            };
+
+            gui.add(gameConfig, 'score', 0).name('Score');
 
             function onKeyDown(event) {
                 switch (event.keyCode) {
@@ -229,12 +236,12 @@
                         bodyPart.direction = 1; 
                     }
                     if(collision > 0){
-                        bodyPart.position.z += 0.5;
+                        bodyPart.position.z += 1.0;
                     } else if (bodyPart.position.x < -size / 2 || bodyPart.position.x > size / 2) {
-                        bodyPart.position.z += 0.5;
+                        bodyPart.position.z += 1.0;
                         bodyPart.direction *= -1;
                     } else if (bodyPart.position.z < -size / 2 || bodyPart.position.z > size / 2) {
-                        bodyPart.position.z += 0.5;
+                        bodyPart.position.z += 1.0;
                         bodyPart.direction *= -1;
                     } 
                     bodyPart.position.x += 0.05 * bodyPart.direction;
@@ -257,13 +264,10 @@
 
             function checkGameResult() {
                 if (centipede.children.length === 0) {
-                    //window.alert("YOU WIN!");
                     showGameOverlay('You Win!');
                 } else {
                     for (var i = 0; i < centipede.children.length; i++) {
-                        if (centipede.children[i].position.z >= divisions / 2) {
-                
-                            //window.alert("YOU LOSE!");
+                        if (centipede.children[i].position.z >= alfur.children[0].position.z +0.5) {
                             showGameOverlay('You Lose!');
                             centipedeAlive = false;
                             break;
@@ -304,7 +308,8 @@
 
             function updateScore(points) {
                 score += points;
-                document.getElementById("score").textContent = "Score: " + score;
+                gameConfig.score = score;
+                gui.updateDisplay();
             }
 
             function showGameOverlay(message) {
@@ -321,7 +326,6 @@
             }
 
 		</script>
-        <div id="score">Score: 0</div>
         <div id="gameOverlay" style="display: none;">
             <div id="gameMessage">You Win!</div>
             <button id="restartButton">Restart</button>

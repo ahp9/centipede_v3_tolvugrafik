@@ -3,19 +3,20 @@ body {
     display: flex;
 }
 
-body #score {
+.score {
     margin: 2rem;
     background-color: #a3b18a;
+    height: 30%;
     padding: 1rem;
     width: 20%;
 }
 
 #gameOverlay {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    top: 0.5%;
+    left: 0.5%;
+    width: 800px;
+    height: 800px;
     background: rgba(0, 0, 0, 0.5);
     display: flex;
     align-items: center;
@@ -27,6 +28,7 @@ body #score {
     font-size: 24px;
     color: white;
     background: rgba(0, 0, 0, 0.7);
+    margin-right: 1rem;
     padding: 20px;
     border-radius: 5px;
 }
