@@ -3,6 +3,11 @@
 	<head>
 		<meta charset="utf-8">
 		<title>Ólíkar áferðir</title>
+        <style>
+            body {
+                background-color: white;
+            }
+        </style>
 	</head>
 	<body>
         <canvas id="c"  width="800" height="800"></canvas>
@@ -15,18 +20,24 @@
 
             const size = 16;
             const divisions = 15;
-            const cellSize = size / divisions;
+            var score = 0;
+
             var cameraView = { checkbox: true };
             var isShooting = false;
 
+            const mushroomColors = [
+                0xFFB6C1,  
+                0xAEC6CF,  
+                0xC3E4C6,  
+                0xE0BBE4
+            ];
+
+
             // Skilgreina sviðsnet
 			const scene = new THREE.Scene();
-            scene.background = new THREE.Color( 0xeeeeee );
+            scene.background = new THREE.Color( 0x000000 );
             
             // Skilgreina myndavél og staðsetja hana
-
-			//const camera = new THREE.PerspectiveCamera( 75, canvas.clientWidth/canvas.clientHeight, 0.1, 1000 );
-			//camera.position.set(0, 5, 16);
             const camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
             camera.position.set(0, 1.5,  12);
 
@@ -66,8 +77,9 @@
 
             //------------------ Teikna sveppina ---------------------------------------------
 
-            const mushrooms = [];
-            const mushroomsStilkur = [];
+            var mushrooms = new THREE.Object3D();
+            var mushroomsStilkur = new THREE.Object3D();
+
             const stilkurGemotry = new THREE.CylinderGeometry(0.1, 0.2, 0.4, 10);
             const stilkurMaterial = new THREE.MeshStandardMaterial({color: 0xffffff});
 
@@ -78,19 +90,18 @@
                 var random = Math.random() * 15 - 7.5;
                 const stilkurBody = new THREE.Mesh(stilkurGemotry, stilkurMaterial);
                 stilkurBody.position.set(random, 0.25, j);
-                scene.add(stilkurBody);
 
                 const hatBody = new THREE.Mesh(hatGemotry, hatMaterial);
                 hatBody.position.set(random, 0.25+0.2, j);
-                scene.add(hatBody)
 
-
-                mushrooms.push(hatBody);
-                mushroomsStilkur.push(stilkurBody);
-
+                mushrooms.add(hatBody);
+                mushroomsStilkur.add(stilkurBody);
             }
 
-            const mushroomHits = new Array(mushrooms.length).fill(0);
+            scene.add(mushrooms);
+            scene.add(mushroomsStilkur);
+
+            const mushroomHits = new Array(mushrooms.children.length).fill(0);
 
             //-----------------Álfur-----------------------------------------------------
             function createPart(geometry, material, position, parent, yOffset) {
@@ -98,8 +109,6 @@
                 part.position.set(position.x, yOffset, position.z);
                 parent.add(part);
             }
-
-
 
             const alfur = new THREE.Object3D();
             scene.add(alfur);
@@ -125,7 +134,7 @@
 
             //-------------------- Skot -----------------------------------------
             const bulletGeometry = new THREE.IcosahedronGeometry(0.1, 5);
-            const bulletMatieral = new THREE.MeshBasicMaterial( { color: 0x8A65E6 }); 
+            const bulletMatieral = new THREE.MeshBasicMaterial( { color: 0xFFFF00 }); 
             const bullet = new THREE.Mesh( bulletGeometry, bulletMatieral );
 
             let bulletActive = false;
@@ -167,20 +176,23 @@
             }
 
             function handleBulletCollision() {
-                for (let i = 0; i < mushrooms.length; i++) {
+                for (let i = 0; i < mushrooms.children.length; i++) {
                     if (mushroomHits[i] < 4) {
-                        const mushroom = mushrooms[i];
+                        const mushroom = mushrooms.children[i];
                         const mushroomPosition = mushroom.position;
                         const distance = bullet.position.distanceTo(mushroomPosition);
                         if (distance < 0.5) {
                             mushroomHits[i]++;
                             scene.remove(bullet);
                             bulletActive = false;
-                            mushroom.material.color.set(0xffff4f);
-                            scene.add(mushroom);
+         
+                            const hatMaterial = new THREE.MeshStandardMaterial({ color: mushroomColors[mushroomHits[i] -1]});
+                            mushroom.material = hatMaterial;
+
                             if (mushroomHits[i] === 4) {
-                                scene.remove(mushroom);
-                                scene.remove(mushroomsStilkur[i]);
+                                updateScore(1);
+                                mushrooms.remove(mushroom);
+                                mushroomsStilkur.remove(mushroomsStilkur.children[i]);
                             }
                             break;
                         } 
@@ -194,8 +206,15 @@
                     if (distance < 0.5) {
                         scene.remove(bullet);
                         bulletActive = false;
+                        if(centipede.children[i].material.color.getHex() === 0xff0000){
+                            updateScore(100);
+                        } else {
+                            updateScore(10);
+                        }
                         centipede.remove(bodyPart);
-                        centipede.children[i].material.color.set(0xff0000);
+                        if(centipede.children[i].material !== undefined){
+                            centipede.children[i].material.color.set(0xff0000);
+                        }                     
                         break;
                     } 
                     
@@ -204,9 +223,12 @@
 
             function centipedeMovement(){
                 var direction = 1;
-                var collision = centipedeMushRoomCollision(centipede.children[0]);
+                 var collision = 0;
                 for(var i = 0; i < centipede.children.length; i++){
                     var bodyPart = centipede.children[i];
+                    if(bodyPart.material.color.getHex() === 0xff0000){
+                        var collision = centipedeMushRoomCollision(centipede.children[0]);
+                    }
                     if (!bodyPart.direction) {
                         bodyPart.direction = 1; 
                     }
@@ -225,15 +247,33 @@
 
 
             function centipedeMushRoomCollision(head){
-                for (let i = 0; i < mushrooms.length; i++) {
-                    const mushroom = mushrooms[i];
+                for (let i = 0; i < mushrooms.children.length; i++) {
+                    const mushroom = mushrooms.children[i];
                     const mushroomPosition = mushroom.position;
                     const distance = head.position.distanceTo(mushroomPosition);
                     if (distance < 0.8) {
-                        return Math.floor(Math.random()*2)*2-1;
+                        return 1;
                     } 
                 }
             }
+
+            var centipedeAlive = true;
+
+            function checkGameResult() {
+                if (centipede.children.length === 0) {
+                    window.alert("YOU WIN!");
+                } else {
+                    for (var i = 0; i < centipede.children.length; i++) {
+                        if (centipede.children[i].position.z >= divisions / 2) {
+                
+                            window.alert("YOU LOSE!");
+                            centipedeAlive = false;
+                            break;
+                        }
+                    }
+                }
+            }
+
 			const animate = function () {
 				requestAnimationFrame( animate );
 
@@ -256,9 +296,19 @@
 	
 
 				renderer.render( scene, camera );
+
+                if (centipedeAlive) {
+                    checkGameResult();
+                }
 			};
 
 			animate();
+
+            function updateScore(points) {
+                score += points;
+                document.getElementById("score").textContent = "Score: " + score;
+}
 		</script>
+        <div id="score">Score: 0</div>
 	</body>
 </html>
