@@ -18,15 +18,15 @@
             const divisions = 15;
             var score = 0;
 
-            var cameraView = { checkbox: true };
-            var isShooting = false;
-
             const mushroomColors = [
                 0xFFB6C1,  
                 0xAEC6CF,  
                 0xC3E4C6,  
                 0xE0BBE4
             ];
+
+            var isShooting;
+            var cameraView;
 
 
             // Skilgreina sviðsnet
@@ -47,110 +47,128 @@
             const gridHelper = new THREE.GridHelper( size, divisions );
             scene.add( gridHelper );
 
-            //-------------------Teikna upp Centipede --------------------------------------
-			const ballGeometry = new THREE.SphereGeometry( 0.4, 12, 10 );
 
-            var centipede = new THREE.Object3D();
-            //Hausinn
-            const headMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
-			var head = new THREE.Mesh(ballGeometry, headMaterial);
-            head.position.z = -8;
-            head.position.y = 0.2;
-            centipede.add(head);
-
-            //Líkami
-            var position = 0.5;
-            for(var i = 0; i < 5; i++){
-                const standardMaterial = new THREE.MeshStandardMaterial( { color: 0x038C3E } );
-			    const body = new THREE.Mesh( ballGeometry, standardMaterial );
-                body.position.x -= (i + 1) * 0.5;
-                body.position.z = -8;
-                body.position.y = 0.2;
-                centipede.add(body);
-                position += 0.5;
-            }
-            scene.add(centipede);
-
-            //------------------ Teikna sveppina ---------------------------------------------
-
+            //------------Hlutir--------------
             var mushrooms = new THREE.Object3D();
             var mushroomsStilkur = new THREE.Object3D();
-
-            const stilkurGemotry = new THREE.CylinderGeometry(0.1, 0.2, 0.4, 10);
-            const stilkurMaterial = new THREE.MeshStandardMaterial({color: 0xffffff});
-
-            const hatGemotry = new THREE.ConeGeometry(0.3, 0.2, 16)
-            const hatMaterial = new THREE.MeshStandardMaterial({color: 0xEB3650});
-
-            for (let j = -8; j <= 8; j++) {
-                var random = Math.random() * 15 - 7.5;
-                const stilkurBody = new THREE.Mesh(stilkurGemotry, stilkurMaterial);
-                stilkurBody.position.set(random, 0.25, j-0.5);
-
-                const hatBody = new THREE.Mesh(hatGemotry, hatMaterial);
-                hatBody.position.set(random, 0.25+0.2, j-0.5);
-
-                mushrooms.add(hatBody);
-                mushroomsStilkur.add(stilkurBody);
-            }
-
-            scene.add(mushrooms);
-            scene.add(mushroomsStilkur);
-
-            const mushroomHits = new Array(mushrooms.children.length).fill(0);
-
-            //-----------------Álfur-----------------------------------------------------
-            function createPart(geometry, material, position, parent, yOffset) {
-                const part = new THREE.Mesh(geometry, material);
-                part.position.set(position.x, yOffset, position.z);
-                parent.add(part);
-            }
-
-            const alfur = new THREE.Object3D();
-            scene.add(alfur);
-
-            const zPosition = divisions / 2 + 1;
-
-            const leftFootGeometry = new THREE.BoxGeometry(0.6, 0.2, 0.4);
-            const leftFootMaterial = new THREE.MeshBasicMaterial({ color: 0x8A65E6 });
-            createPart(leftFootGeometry, leftFootMaterial, { x: 0, z: zPosition }, alfur, 0.1);
-
-            const upperBodyGeometry = new THREE.CapsuleGeometry(0.4, 0.1, 1.5, 5);
-            const upperBodyMaterial = new THREE.MeshBasicMaterial({ color: 0x638BE1 });
-            createPart(upperBodyGeometry, upperBodyMaterial, { x: 0, z: zPosition }, alfur, 0.55);
-
-            const faceAlfurGeometry = new THREE.SphereGeometry(0.3, 24, 24);
-            const faceAlfurMaterial = new THREE.MeshBasicMaterial({ color: 0xE0B78D });
-            createPart(faceAlfurGeometry, faceAlfurMaterial, { x: 0, z: zPosition }, alfur, 1.35);
-
-            const hatAlfurGeometry = new THREE.ConeGeometry(0.5, 0.5, 10);
-            const hatAlfurMaterial = new THREE.MeshStandardMaterial({ color: 0xEB3650 });
-            createPart(hatAlfurGeometry, hatAlfurMaterial, { x: 0, z: zPosition }, alfur, 1.8);
-
-
-            //-------------------- Skot -----------------------------------------
-            const bulletGeometry = new THREE.IcosahedronGeometry(0.1, 5);
-            const bulletMatieral = new THREE.MeshBasicMaterial( { color: 0xFFFF00 }); 
-            const bullet = new THREE.Mesh( bulletGeometry, bulletMatieral );
-
+            var centipede = new THREE.Object3D();
+            var alfur = new THREE.Object3D();
+            var mushroomHits;
             let bulletActive = false;
+            var bullet;
+            const gui = new dat.GUI();
+            var gameConfig;
+            createGame();
+
+
+            function createGame(){
+                
+                cameraView = { checkbox: true };
+                isShooting = false;
+
+                //-------------------Teikna upp Centipede --------------------------------------
+			    const ballGeometry = new THREE.SphereGeometry( 0.4, 12, 10 );
+
+                centipede = new THREE.Object3D();
+                //Hausinn
+                const headMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+                var head = new THREE.Mesh(ballGeometry, headMaterial);
+                head.position.z = -8;
+                head.position.y = 0.2;
+                centipede.add(head);
+
+                //Líkami
+                var position = 0.5;
+                for(var i = 0; i < 5; i++){
+                    const standardMaterial = new THREE.MeshStandardMaterial( { color: 0x038C3E } );
+                    const body = new THREE.Mesh( ballGeometry, standardMaterial );
+                    body.position.x -= (i + 1) * 0.5;
+                    body.position.z = -8;
+                    body.position.y = 0.2;
+                    centipede.add(body);
+                    position += 0.5;
+                }
+                scene.add(centipede);
+
+                //------------------ Teikna sveppina ---------------------------------------------
+                mushrooms = new THREE.Object3D();
+                mushroomsStilkur = new THREE.Object3D();
+
+                const stilkurGemotry = new THREE.CylinderGeometry(0.1, 0.2, 0.4, 10);
+                const stilkurMaterial = new THREE.MeshStandardMaterial({color: 0xffffff});
+
+                const hatGemotry = new THREE.ConeGeometry(0.3, 0.2, 16)
+                const hatMaterial = new THREE.MeshStandardMaterial({color: 0xEB3650});
+
+                for (let j = -8; j <= 8; j++) {
+                    var random = Math.random() * 15 - 7.5;
+                    const stilkurBody = new THREE.Mesh(stilkurGemotry, stilkurMaterial);
+                    stilkurBody.position.set(random, 0.25, j-0.5);
+
+                    const hatBody = new THREE.Mesh(hatGemotry, hatMaterial);
+                    hatBody.position.set(random, 0.25+0.2, j-0.5);
+
+                    mushrooms.add(hatBody);
+                    mushroomsStilkur.add(stilkurBody);
+                }
+
+                scene.add(mushrooms);
+                scene.add(mushroomsStilkur);
+
+                mushroomHits = new Array(mushrooms.children.length).fill(0);
+
+                //-----------------Álfur-----------------------------------------------------
+
+                function createPart(geometry, material, position, parent, yOffset) {
+                    const part = new THREE.Mesh(geometry, material);
+                    part.position.set(position.x, yOffset, position.z);
+                    parent.add(part);
+                }
+
+                alfur = new THREE.Object3D();
+                scene.add(alfur);
+
+                const zPosition = divisions / 2 + 1;
+
+                const leftFootGeometry = new THREE.BoxGeometry(0.6, 0.2, 0.4);
+                const leftFootMaterial = new THREE.MeshBasicMaterial({ color: 0x8A65E6 });
+                createPart(leftFootGeometry, leftFootMaterial, { x: 0, z: zPosition }, alfur, 0.1);
+
+                const upperBodyGeometry = new THREE.CapsuleGeometry(0.4, 0.1, 1.5, 5);
+                const upperBodyMaterial = new THREE.MeshBasicMaterial({ color: 0x638BE1 });
+                createPart(upperBodyGeometry, upperBodyMaterial, { x: 0, z: zPosition }, alfur, 0.55);
+
+                const faceAlfurGeometry = new THREE.SphereGeometry(0.3, 24, 24);
+                const faceAlfurMaterial = new THREE.MeshBasicMaterial({ color: 0xE0B78D });
+                createPart(faceAlfurGeometry, faceAlfurMaterial, { x: 0, z: zPosition }, alfur, 1.35);
+
+                const hatAlfurGeometry = new THREE.ConeGeometry(0.5, 0.5, 10);
+                const hatAlfurMaterial = new THREE.MeshStandardMaterial({ color: 0xEB3650 });
+                createPart(hatAlfurGeometry, hatAlfurMaterial, { x: 0, z: zPosition }, alfur, 1.8);
+
+                //-------------------- Skot -----------------------------------------
+                const bulletGeometry = new THREE.IcosahedronGeometry(0.1, 5);
+                const bulletMatieral = new THREE.MeshBasicMaterial( { color: 0xFFFF00 }); 
+                bullet = new THREE.Mesh( bulletGeometry, bulletMatieral );
+
+                let bulletActive = false;
+
+                //------------GUI----------------------------------------------------------
+                gui.add(cameraView, 'checkbox').onChange(function (value) {
+                    console.log(value);
+                }); 
+
+                gameConfig = {
+                    score: 0,
+                };
+
+                gui.add(gameConfig, 'score', 0).name('Score');
+            }
             
             //----------------------Ljós----------------------------------------------------
             const light = new THREE.DirectionalLight(0xFFFFFF, 1);
             light.position.set(3, 3, 3);
             scene.add(light);
-
-            //------------GUI-----------------------------------------------------------
-            const gui = new dat.GUI();
-            gui.add(cameraView, 'checkbox').onChange(function (value) {
-                console.log(value);
-            }); 
-
-            const gameConfig = {
-                score: 0,
-            };
-
-            gui.add(gameConfig, 'score', 0).name('Score');
 
             function onKeyDown(event) {
                 switch (event.keyCode) {
@@ -226,7 +244,7 @@
 
             function centipedeMovement(){
                 var direction = 1;
-                 var collision = 0;
+                var collision = 0;
                 for(var i = 0; i < centipede.children.length; i++){
                     var bodyPart = centipede.children[i];
                     if(bodyPart.material.color.getHex() === 0xff0000){
@@ -270,10 +288,15 @@
                         if (centipede.children[i].position.z >= alfur.children[0].position.z +0.5) {
                             showGameOverlay('You Lose!');
                             centipedeAlive = false;
+                            hideGameOverlay();
+                            createGame();
                             break;
                         }
                     }
                 }
+
+                //const restart = document.getElementById("restartButton");
+                
             }
 
 			const animate = function () {
