@@ -49,9 +49,6 @@
 
 
             //------------Hlutir--------------
-            var mushrooms;
-            var mushroomsStilkur ;
-            var centipede;
             var alfur;
             var mushroomHits;
             let bulletActive = false;
@@ -62,24 +59,15 @@
             var cenitpedeDirection;
             var bodyParts;
             var head;
+            var mushrooms;
+            var mushroomsStilkur;
+            var centipede;
+
             createGame();
 
             //---------------GUI---------------------------------
-            gui = new dat.GUI();
-            gui.add(cameraView, 'checkbox').onChange(function (value) {
-                    console.log(value);
-                }); 
-
-                gameConfig = {
-                    score: 0,
-                };
-
-                gui.add(gameConfig, 'score', 0).name('Score');
 
             function createGame(){
-                mushrooms = new THREE.Object3D();
-                mushroomsStilkur = new THREE.Object3D();
-                centipede = new THREE.Object3D();
                 bodyParts = [];
                 alfur = new THREE.Object3D();
                 cameraView = { checkbox: true };
@@ -155,6 +143,16 @@
                 let bulletActive = false;
 
                 //------------GUI----------------------------------------------------------
+                gui = new dat.GUI();
+                gui.add(cameraView, 'checkbox').onChange(function (value) {
+                    console.log(value);
+                }); 
+
+                gameConfig = {
+                    score: 0,
+                };
+
+                gui.add(gameConfig, 'score', 0).name('Score');
             }
             
             function createMushroom(start, bodyPart){
@@ -206,7 +204,9 @@
                 var oldP = oldPosition(bodyParts);
                 for(var i = 0; i < bodyParts.length; i++){
                     var bodyPart = bodyParts[i];
+
                     if(bodyPart.material.color.getHex() === 0xff0000){
+                       /*
                         var newBody = [];
                         newBody.push(bodyPart);
                         if(i + 1 < bodyParts.length ){
@@ -216,18 +216,16 @@
                                 }
                             }
                         }
-                        collision = centipedeMushRoomCollision(bodyPart, newBody);
-                        //console.log(collision);
+                       */
+                        collision = centipedeMushRoomCollision(bodyPart);
                     }
 
                     if (!bodyPart.direction) {
                         bodyPart.direction = 1; 
                     } 
 
-                    if(collision > 0){
-                        if (i === 0) {
-                            bodyPart.position.z += 0.5;
-                        }
+                    if(collision ){
+                        bodyPart.position.z += 0.5;
                     } else if (bodyPart.position.x < -size / 2 || bodyPart.position.x > size / 2) {
                         bodyPart.position.z += 0.5;
                         bodyPart.direction *= -1;
@@ -238,7 +236,7 @@
 
                     if(bodyPart.material.color.getHex() === 0xff0000){
                         bodyPart.position.x += 0.05 * bodyPart.direction;
-                    } else {
+                    } else if(i !== 0) {
                         bodyPart.position.x = oldP[i - 1].x-0.5;
                         bodyPart.position.z = oldP[i - 1].z;
                     }
@@ -251,12 +249,6 @@
                     position.push({x:bodyParts[i].position.x, z:bodyParts[i].position.z}) ;
                 }
                 return position;
-            }
-
-            function oldDirections(bodyParts){
-                if(!bodyParts[0].direction){
-                    return null;
-                }
             }
 
             function onKeyDown(event) {
@@ -322,13 +314,12 @@
                             updateScore(10);
                         }
 
-                        if(centipede.children[i+1].material !== undefined && i+1 < bodyParts.length){
+                        if(centipede.children[i+1] !== undefined && i+1 < bodyParts.length){
                             centipede.children[i+1].material.color.set(0xff0000);
                             centipede.children[i].material.color.set(0xffffff);
                         }
                         centipede.remove(bodyPart);
 
-                        //console.log(bodyParts);
                         createMushroom(false, bodyPart);                     
                         break;
                     } 
@@ -337,14 +328,14 @@
             }
 
 
-            function centipedeMushRoomCollision(headP, bodyParts) {
+            function centipedeMushRoomCollision(headP) {
                 for (let i = 0; i < mushrooms.children.length; i++) {
                     const mushroom = mushrooms.children[i];
                     const mushroomPosition = mushroom.position;
                     const distance = headP.position.distanceTo(mushroomPosition);
 
                     if (distance < 0.8) {
-    
+                        console.log("true");
                         const directionToMushroom = new THREE.Vector3().copy(mushroomPosition).sub(headP.position).normalize();
                         const newDirectionZ = new THREE.Vector3(0, 0, -1);
 
@@ -448,19 +439,18 @@
             }
 
             function restart(){
-                scene.remove(centipede);
                 scene.remove(mushrooms);
                 scene.remove(mushroomsStilkur);
+                centipede.clear();
+                mushrooms.clear();
+                mushroomsStilkur.clear();
+ 
                 scene.remove(alfur);
-                gui.remove(gui.add(cameraView, 'checkbox').onChange(function (value) {
-                    console.log(value);
-                }));
-                gui.remove(gui.add(gameConfig, 'score', 0).name('Score'))
-                console.log(gameConfig.score);
                 hideGameOverlay();
                 createGame();
 
                     // Initialize the GUI settings
+                gui.destroy();
                 cameraView.checkbox = true;
                 gameConfig.score = 0;
                 gui.add(cameraView, 'checkbox').onChange(function (value) {
