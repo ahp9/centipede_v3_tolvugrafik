@@ -17,6 +17,7 @@
             const size = 16;
             const divisions = 15;
             var score = 0;
+            var speed = 0.4;
 
             const mushroomColors = [
                 0xFFB6C1,  
@@ -123,9 +124,11 @@
                     body.position.y = 0.2;
                     centipede.add(body);
                     bodyParts.push(body);
+                    console.log(body.position);
                     position += 0.5;
                 }
                 scene.add(centipede);
+                
 
                 cenitpedeDirection = new THREE.Vector3(0.5, 0, 0);
 
@@ -241,9 +244,9 @@
                     } 
 
                     if(bodyPart.material.color.getHex() === 0xff0000){
-                        bodyPart.position.x += 0.05 * bodyPart.direction;
+                        bodyPart.position.x += 0.5 * bodyPart.direction;
                     } else if(i !== 0) {
-                        bodyPart.position.x = oldP[i - 1].x + (-0.5 * bodyPart.direction);
+                        bodyPart.position.x = oldP[i - 1].x;
                         bodyPart.position.z = oldP[i - 1].z;
                     }
                 }
@@ -363,7 +366,6 @@
                     centipedeAlive = false;
                 } else {
                     for (var i = 0; i < centipede.children.length; i++) {
-                        //console.log(alfur.children);
                         if (centipede.children[i].position.z >= alfur.children[0].position.z +0.5) {
                             showGameOverlay('You Lose!');
                             centipedeAlive = false;
