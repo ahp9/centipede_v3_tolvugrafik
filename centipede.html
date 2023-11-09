@@ -202,30 +202,32 @@
             scene.add(light);
 
             function updateCentipede(){
-                var prevX = centipede.children[0].position.x;
-                var prevZ = centipede.children[0].position.z;
-                console.log("prev x " + prevX);
-
                 var collision = 0;
-                for(var i = 0; i < centipede.children.length; i++){
-                    var bodyPart = centipede.children[i];
-
+                var oldP = oldPosition(bodyParts);
+                for(var i = 0; i < bodyParts.length; i++){
+                    var bodyPart = bodyParts[i];
                     if(bodyPart.material.color.getHex() === 0xff0000){
-                        var collision = centipedeMushRoomCollision(centipede.children[0]);
+                        var newBody = [];
+                        newBody.push(bodyPart);
+                        if(i + 1 < bodyParts.length ){
+                            if(bodyParts[i+1].material.color.getHex() !== 0xff0000){
+                                for(var j = i+1; j < bodyParts.length; j++){
+                                    newBody.push(bodyParts[j]);
+                                }
+                            }
+                        }
+                        collision = centipedeMushRoomCollision(bodyPart, newBody);
+                        //console.log(collision);
                     }
 
                     if (!bodyPart.direction) {
                         bodyPart.direction = 1; 
-                    }
+                    } 
 
                     if(collision > 0){
                         if (i === 0) {
-                            for(let j = 0; i < bodyParts.length; j++){
-                                b = bodyParts[j];
-                                b.position.z += 0.5;
-                                b.position.x += 0.05 * bodyPart.direction;
-                            }
-                        } 
+                            bodyPart.position.z += 0.5;
+                        }
                     } else if (bodyPart.position.x < -size / 2 || bodyPart.position.x > size / 2) {
                         bodyPart.position.z += 0.5;
                         bodyPart.direction *= -1;
@@ -234,7 +236,26 @@
                         bodyPart.direction *= -1;
                     } 
 
-                    bodyPart.position.x += 0.05 * bodyPart.direction;
+                    if(bodyPart.material.color.getHex() === 0xff0000){
+                        bodyPart.position.x += 0.05 * bodyPart.direction;
+                    } else {
+                        bodyPart.position.x = oldP[i - 1].x-0.5;
+                        bodyPart.position.z = oldP[i - 1].z;
+                    }
+                }
+            }
+
+            function oldPosition(bodyParts){
+                var position = [];
+                for(let i = 0; i < bodyParts.length; i++){
+                    position.push({x:bodyParts[i].position.x, z:bodyParts[i].position.z}) ;
+                }
+                return position;
+            }
+
+            function oldDirections(bodyParts){
+                if(!bodyParts[0].direction){
+                    return null;
                 }
             }
 
@@ -300,59 +321,37 @@
                         } else {
                             updateScore(10);
                         }
+
+                        if(centipede.children[i+1].material !== undefined && i+1 < bodyParts.length){
+                            centipede.children[i+1].material.color.set(0xff0000);
+                            centipede.children[i].material.color.set(0xffffff);
+                        }
                         centipede.remove(bodyPart);
-                        createMushroom(false, bodyPart);
-                        if(centipede.children[i].material !== undefined){
-                            centipede.children[i].material.color.set(0xff0000);
-                        }                     
+
+                        //console.log(bodyParts);
+                        createMushroom(false, bodyPart);                     
                         break;
                     } 
                     
                 }
             }
 
-            /**
-            function centipedeMovement(){
-                var direction = 1;
-                var collision = 0;
-                for(var i = 0; i < centipede.children.length; i++){
-                    var bodyPart = centipede.children[i];
-                    if(bodyPart.material.color.getHex() === 0xff0000){
-                        var collision = centipedeMushRoomCollision(centipede.children[0]);
-                    }
-                    if (!bodyPart.direction) {
-                        bodyPart.direction = 1; 
-                    }
-                    if(collision > 0){
-                        bodyPart.position.z += 1.0;
-                    } else if (bodyPart.position.x < -size / 2 || bodyPart.position.x > size / 2) {
-                        bodyPart.position.z += 1.0;
-                        bodyPart.direction *= -1;
-                    } else if (bodyPart.position.z < -size / 2 || bodyPart.position.z > size / 2) {
-                        bodyPart.position.z += 1.0;
-                        bodyPart.direction *= -1;
-                    } 
-                    bodyPart.position.x += 0.05 * bodyPart.direction;
-                }
-            }
-            */
 
-
-            function centipedeMushRoomCollision(head) {
+            function centipedeMushRoomCollision(headP, bodyParts) {
                 for (let i = 0; i < mushrooms.children.length; i++) {
                     const mushroom = mushrooms.children[i];
                     const mushroomPosition = mushroom.position;
-                    const distance = head.position.distanceTo(mushroomPosition);
+                    const distance = headP.position.distanceTo(mushroomPosition);
 
                     if (distance < 0.8) {
     
-                        const directionToMushroom = new THREE.Vector3().copy(mushroomPosition).sub(head.position).normalize();
+                        const directionToMushroom = new THREE.Vector3().copy(mushroomPosition).sub(headP.position).normalize();
                         const newDirectionZ = new THREE.Vector3(0, 0, -1);
 
                         const newDirectionX = new THREE.Vector3(-0.5, 0, 0);
 
-                        const newHeadPositionZ = new THREE.Vector3().copy(head.position).add(newDirectionZ);
-                        const newHeadPositionX = new THREE.Vector3().copy(head.position).add(newDirectionX);
+                        const newHeadPositionZ = new THREE.Vector3().copy(headP.position).add(newDirectionZ);
+                        const newHeadPositionX = new THREE.Vector3().copy(headP.position).add(newDirectionX);
 
                         let canMoveZ = true;
                         let canMoveX = true;
