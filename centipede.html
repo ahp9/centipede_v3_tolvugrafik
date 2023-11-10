@@ -17,7 +17,7 @@
             const size = 16;
             const divisions = 15;
             var score = 0;
-            var speed = 0.4;
+            var speed = 0.05;
 
             const mushroomColors = [
                 0xFFB6C1,  
@@ -62,6 +62,7 @@
             var mushrooms;
             var mushroomsStilkur;
             var centipede;
+            var centipedeOrigin;
 
             createGame();
             createAlf();
@@ -98,6 +99,7 @@
 
             function createGame(){
                 bodyParts = [];
+                centipedeOrigin = [];
                 alfur = new THREE.Object3D();
                 cameraView = { checkbox: true };
                 isShooting = false;
@@ -113,6 +115,7 @@
                 head.position.y = 0.2;
                 centipede.add(head);
                 bodyParts.push(head);
+                centipedeOrigin.push(head);
 
                 //Líkami
                 var position = 0.5;
@@ -124,7 +127,7 @@
                     body.position.y = 0.2;
                     centipede.add(body);
                     bodyParts.push(body);
-                    console.log(body.position);
+                    centipedeOrigin.push(body);
                     position += 0.5;
                 }
                 scene.add(centipede);
@@ -209,7 +212,6 @@
                     mushrooms.add(hatBody);
                     mushroomsStilkur.add(stilkurBody);
                     mushroomHits.push(0);
-                    console.log(mushroomHits);
                 }
 
                 scene.add(mushrooms);
@@ -221,48 +223,7 @@
             light.position.set(3, 3, 3);
             scene.add(light);
 
-            function updateCentipede(){
-                var collision = 0;
-                var oldP = oldPosition(bodyParts);
-                for(var i = 0; i < bodyParts.length; i++){
-                    var bodyPart = bodyParts[i];
-
-                    if(bodyPart.material.color.getHex() === 0xff0000){
-                        collision = centipedeMushRoomCollision(bodyPart);
-                    }
-
-                    if(collision ){
-                        bodyPart.position.z += 0.5;
-                    }
-                    
-                    if (bodyPart.position.x < -size / 2 || bodyPart.position.x > size / 2) {
-                        bodyPart.position.z += 0.5;
-                        bodyPart.direction *= -1;
-                    } else if (bodyPart.position.z < -size / 2 || bodyPart.position.z > size / 2) {
-                        bodyPart.position.z += 0.5;
-                        bodyPart.direction *= -1;
-                    } 
-
-                    if(bodyPart.material.color.getHex() === 0xff0000){
-                        bodyPart.position.x += 0.5 * bodyPart.direction;
-                    } else if(i !== 0) {
-                        bodyPart.position.x = oldP[i - 1].x;
-                        bodyPart.position.z = oldP[i - 1].z;
-                    }
-                }
-            }
-
-            function oldPosition(bodyParts){
-                var position = [];
-                for(let i = 0; i < bodyParts.length; i++){
-                    if(!bodyParts[i].direction){
-                        bodyParts[i].direction = 1;
-                    }
-                    position.push({x:bodyParts[i].position.x, z:bodyParts[i].position.z, direction:bodyParts[i].direction}) ;
-                }
-                return position;
-            }
-
+            //----------------KeyEvent--------------------------------------------------------
             function onKeyDown(event) {
                 switch (event.keyCode) {
                     case 65: 
@@ -285,6 +246,51 @@
 
             document.addEventListener('keydown', onKeyDown);
 
+            //--------------------Centipede movement--------------------------------------------
+
+            function updateCentipede(){
+                var collision = 0;
+                var oldP = oldPosition(bodyParts);
+                var outOfCanvas = false;
+                for(var i = 0; i < bodyParts.length; i++){
+                    var bodyPart = bodyParts[i];
+                    if(!bodyPart.direction){
+                        bodyPart.direction = 1;
+                    }
+
+                    if(bodyPart.material.color.getHex() === 0xff0000){
+                        collision = centipedeMushRoomCollision(bodyPart);
+                    }
+
+                    if(collision){
+                        bodyPart.position.z += 0.5;
+                        outOfCanvas = false;
+                    } else if(bodyPart.position.x < -size / 2 || bodyPart.position.x > size / 2){
+                        bodyPart.position.z += 0.5;
+                        bodyPart.direction *= -1;
+                        outOfCanvas = true;
+                    }
+
+                    if(bodyPart.material.color.getHex() === 0xff0000){
+                        bodyPart.position.x += 0.05 * bodyPart.direction;
+                    } else if(i !== 0) {
+                        bodyPart.position.x += 0.05*bodyPart.direction; 
+                        if(!outOfCanvas){
+                            bodyPart.position.z = oldP[i - 1].z;
+                        }
+                    }
+                }
+            }
+
+            function oldPosition(bodyParts){
+                var position = [];
+                for(let i = 0; i < bodyParts.length; i++){
+                    position.push({z:bodyParts[i].position.z}) ;
+                }
+                return position;
+            }
+
+            //-----------------------Bullet action and Collision -------------------------------------
             function shoot(){
                 if (!bulletActive) {
                     const vector = new THREE.Vector3(0, 0, -1);
@@ -353,29 +359,14 @@
                     const mushroomPosition = mushroom.position;
                     const distance = headP.position.distanceTo(mushroomPosition);
 
-                    if (distance < 0.8) {      
+                    if (distance < 0.6) {     
                         return true;
                     }
                 }
                 return false;
             }
 
-            function checkGameResult() {
-                if (centipede.children.length === 0) {
-                    showGameOverlay('You Win!');
-                    centipedeAlive = false;
-                } else {
-                    for (var i = 0; i < centipede.children.length; i++) {
-                        if (centipede.children[i].position.z >= alfur.children[0].position.z +0.5) {
-                            showGameOverlay('You Lose!');
-                            centipedeAlive = false;
-                            break;
-                        }
-                    }
-                }
-
-                
-            }
+            //------------------------------Animation-------------------------------------
 
 			const animate = function () {
 				requestAnimationFrame( animate );
@@ -399,23 +390,23 @@
 
 			animate();
 
-            function updateScore(points) {
-                score += points;
-                gameConfig.score = score;
-                gui.updateDisplay();
-            }
+            //-------------------Game Results--------------------------------------------------
 
-            function showGameOverlay(message) {
-                const gameOverlay = document.getElementById('gameOverlay');
-                const gameMessage = document.getElementById('gameMessage');
+            function checkGameResult() {
+                if (centipede.children.length === 0) {
+                    showGameOverlay('Þú vannst!', 'Þú fékkst ' + score + ' stig');
+                    centipedeAlive = false;
+                } else {
+                    for (var i = 0; i < centipede.children.length; i++) {
+                        if (centipede.children[i].position.z >= alfur.children[0].position.z +0.5) {
+                            showGameOverlay('Þú tapaðir!', 'Þú fékkst engin stig');
+                            centipedeAlive = false;
+                            break;
+                        }
+                    }
+                }
 
-                gameMessage.textContent = message;
-                gameOverlay.style.display = 'flex';
-            }
-
-            function hideGameOverlay() {
-                const gameOverlay = document.getElementById('gameOverlay');
-                gameOverlay.style.display = 'none';
+                
             }
 
             function restart(){
@@ -438,10 +429,37 @@
                 score = 0;
             }
 
+            function updateScore(points) {
+                score += points;
+                gameConfig.score = score;
+                gui.updateDisplay();
+            }
+
+            function showGameOverlay(message, pointsM) {
+                const gameOverlay = document.getElementById('gameOverlay');
+                const gameMessage = document.getElementById('gameMessage');
+                const pointsMessage = document.getElementById('pointsMessage');
+
+                gameMessage.textContent = message;
+                pointsMessage.textContent = pointsM;
+                gameOverlay.style.display = 'flex';
+            }
+
+            function hideGameOverlay() {
+                const gameOverlay = document.getElementById('gameOverlay');
+                gameOverlay.style.display = 'none';
+            }
+
 		</script>
         <div id="gameOverlay" style="display: none;">
-            <div id="gameMessage">You Win!</div>
-            <button id="restartButton" onclick=restart()>Restart</button>
+            <div class="gameMessage">
+                <div id="gameMessage">Þú vannst!</div>
+                <div id="pointsMessage">
+                    <p>Þú fékkst </p>
+                    <p id="pointsOfGame">0</p>
+                </div>
+            </div>
+            <button id="restartButton" onclick=restart()>Byrja nýjan leik</button>
         </div>
         
 	</body>
