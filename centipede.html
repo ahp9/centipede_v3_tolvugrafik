@@ -45,8 +45,11 @@
 			const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
 
             // ----------------------Teikna gridið ------------------------------------------
-            const gridHelper = new THREE.GridHelper( size, divisions );
-            scene.add( gridHelper );
+            const geometry = new THREE.PlaneGeometry( size, divisions );
+            const material = new THREE.MeshBasicMaterial( {color: 0x26B54C, side: THREE.DoubleSide} );
+            const plane = new THREE.Mesh( geometry, material );
+            plane.rotation.x = Math.PI / 2;
+            scene.add( plane );
 
 
             //------------Hlutir--------------
@@ -111,7 +114,7 @@
                 //Hausinn
                 const headMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
                 head = new THREE.Mesh(ballGeometry, headMaterial);
-                head.position.z = -8;
+                head.position.z = -7;
                 head.position.y = 0.2;
                 centipede.add(head);
                 bodyParts.push(head);
@@ -123,7 +126,7 @@
                     const standardMaterial = new THREE.MeshStandardMaterial( { color: 0x038C3E } );
                     const body = new THREE.Mesh( ballGeometry, standardMaterial );
                     body.position.x -= (i + 1) * 0.5;
-                    body.position.z = -8;
+                    body.position.z = -7;
                     body.position.y = 0.2;
                     centipede.add(body);
                     bodyParts.push(body);
@@ -190,18 +193,18 @@
                 const hatBody = new THREE.Mesh(hatGemotry, hatMaterial);
 
                 if(start){
-                    for (let j = -8; j <= 8; j++) {
-                        var random = Math.random() * 15 - 7.5;
+                    for (let j = -7; j <= 7; j++) {
+                        var random = Math.random() * 13 - 6.5;
                         const stilkurBody = new THREE.Mesh(stilkurGemotry, stilkurMaterial);
-                        stilkurBody.position.set(random, 0.25, j-0.5);
+                        stilkurBody.position.set(random, 0.25, j);
 
                         const hatBody = new THREE.Mesh(hatGemotry, hatMaterial);
-                        hatBody.position.set(random, 0.25+0.2, j-0.5);
+                        hatBody.position.set(random, 0.25+0.2, j);
 
                         mushrooms.add(hatBody);
                         mushroomsStilkur.add(stilkurBody);
-                        mushroomHits = new Array(mushrooms.children.length).fill(0);
                     }
+                    mushroomHits = new Array(mushrooms.children.length).fill(0);
                 } else {
                     const stilkurBody = new THREE.Mesh(stilkurGemotry, stilkurMaterial);
                     stilkurBody.position.set(bodyPart.position.x, 0.25, bodyPart.position.z);
@@ -212,6 +215,7 @@
                     mushrooms.add(hatBody);
                     mushroomsStilkur.add(stilkurBody);
                     mushroomHits.push(0);
+                    console.log(mushroomHits);
                 }
 
                 scene.add(mushrooms);
@@ -254,9 +258,6 @@
                 var outOfCanvas = false;
                 for(var i = 0; i < bodyParts.length; i++){
                     var bodyPart = bodyParts[i];
-                    if(!bodyPart.direction){
-                        bodyPart.direction = 1;
-                    }
 
                     if(bodyPart.material.color.getHex() === 0xff0000){
                         collision = centipedeMushRoomCollision(bodyPart);
@@ -264,20 +265,16 @@
 
                     if(collision){
                         bodyPart.position.z += 0.5;
-                        outOfCanvas = false;
                     } else if(bodyPart.position.x < -size / 2 || bodyPart.position.x > size / 2){
                         bodyPart.position.z += 0.5;
                         bodyPart.direction *= -1;
-                        outOfCanvas = true;
                     }
 
                     if(bodyPart.material.color.getHex() === 0xff0000){
                         bodyPart.position.x += 0.05 * bodyPart.direction;
                     } else if(i !== 0) {
                         bodyPart.position.x += 0.05*bodyPart.direction; 
-                        if(!outOfCanvas){
-                            bodyPart.position.z = oldP[i - 1].z;
-                        }
+                        bodyPart.position.z = oldP[i - 1].z;
                     }
                 }
             }
@@ -285,7 +282,11 @@
             function oldPosition(bodyParts){
                 var position = [];
                 for(let i = 0; i < bodyParts.length; i++){
-                    position.push({z:bodyParts[i].position.z}) ;
+
+                    if(!bodyParts[i].direction){
+                        bodyParts[i].direction = 1;
+                    }
+                    position.push({z:bodyParts[i].position.z, direction: bodyParts[i].direction}) ;
                 }
                 return position;
             }
@@ -398,10 +399,14 @@
                     centipedeAlive = false;
                 } else {
                     for (var i = 0; i < centipede.children.length; i++) {
-                        if (centipede.children[i].position.z >= alfur.children[0].position.z +0.5) {
-                            showGameOverlay('Þú tapaðir!', 'Þú fékkst engin stig');
-                            centipedeAlive = false;
-                            break;
+                        if(centipede.children[i].material.color.getHex() === 0xff0000){
+                            if ( centipede.children[i].position.z >= size/2&& centipede.children[i].position.x > alfur.children[0].position.x - 0.3 &&
+                            centipede.children[i].position.x <  alfur.children[0].position.x +0.3) {
+                                centipede.clear();
+                                showGameOverlay('Þú tapaðir!', 'Þú fékkst engin stig');
+                                centipedeAlive = false;
+                                break;
+                            }
                         }
                     }
                 }
@@ -414,7 +419,6 @@
                     scene.remove(mushrooms.children[i]);
                 } 
                 scene.remove(mushroomsStilkur);
-                centipede.clear();
                 mushrooms.clear();
                 mushroomsStilkur.clear();
  
