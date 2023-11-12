@@ -410,8 +410,8 @@
                 } else {
                     for (var i = 0; i < centipede.children.length; i++) {
                         if(centipede.children[i].material.color.getHex() === 0xff0000){
-                            if ( centipede.children[i].position.z >= size/2-0.5&& centipede.children[i].position.x > alfur.children[0].position.x - 0.3 &&
-                            centipede.children[i].position.x <  alfur.children[0].position.x +0.3) {
+                            if ( centipede.children[i].position.z >= size/2-0.5&& centipede.children[i].position.x > alfur.position.x - 0.3 &&
+                            centipede.children[i].position.x <  alfur.position.x +0.3) {
                                 centipede.clear();
                                 showGameOverlay('Þú tapaðir!', 'Þú fékkst engin stig');
                                 centipedeAlive = false;
