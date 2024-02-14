@@ -5,10 +5,7 @@
 		<title>Centipede leikur</title>
         <link rel="stylesheet" href="./styles.css">
 	</head>
-    <header class="header">
-        <h2>Tölvugrafík Verkefni 3</h2>
-        <p>Ástríður Haraldsdóttir Passauer</p>
-    </header>
+
 	<body>
         <canvas id="c"  width="800" height="800"></canvas>
 		<script src="js/three.js"></script>
@@ -409,7 +406,7 @@
                             if ( centipede.children[i].position.z >= size/2-0.5&& centipede.children[i].position.x > alfur.position.x - 0.3 &&
                             centipede.children[i].position.x <  alfur.position.x +0.3) {
                                 centipede.clear();
-                                showGameOverlay('Þú tapaðir!', 'Þú fékkst engin stig');
+                                showGameOverlay('Þú tapaðir!', 'Þú fékkst ' + score + ' stig');
                                 centipedeAlive = false;
                                 break;
                             }

@@ -3,14 +3,7 @@ body {
     display: flex;
 }
 
-.header {
-    background-color: #a3b18a;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 1rem;
-    margin-right: 1rem;
-}
+
 
 .score {
     margin: 2rem;
@@ -23,11 +16,7 @@ body {
 #gameOverlay {
     position: absolute;
     top: 1%;
-    left: 19.5%;
-    width: 800px;
-    height: 800px;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
+    
     align-items: center;
     justify-content: center;
     z-index: 100;
