@@ -8,3 +8,5 @@ You will get 10 points for every bodypart and 100 points for a head of a centipe
 ## Movement of the garden elf
 To move the elf you use the key 'A' and 'D', and elf will move left and right. To shoot you press the 'Spacebar', and a bullet will come from the position that the elf is in.
 You can also change the camera position by checking a checkbox witch changes it from looking from the garden elfs eyes to an overlook over everything.
+
+Netlify link - https://cendipede-leikur-tolvugrafik.netlify.app/
